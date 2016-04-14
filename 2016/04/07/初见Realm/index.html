@@ -56,23 +56,19 @@
 </span>
     <h1 class="post-title">初见Realm</h1>
     <section class="post-content">
-      <p>关于Realm，其实很早之前就有看到不少文章，当时公司没有持久化保存的需求，我也就没动力去研究。最近公司决定给客户端加上聊天功能，需要用到数据库了。我想终于可以用用这个慕名已久的数据库了。本篇文章是介绍Realm和简单的应用例子，方便自己查询，不用动不动看文档，一开始可能不会涉及到复杂的东西，如多线程，加密那些。循序渐进，因为我也是刚开始挖坑之旅。 </p>
-<p>##为什么选择Realm</p>
-<p>原因就是：快、准，并且支持多平台。   </p>
+      <p>关于Realm，其实很早之前就有看到不少文章，当时公司没有持久化保存的需求，我也就没动力去研究。最近公司决定给客户端加上聊天功能，需要用到数据库了。我想终于可以用用这个慕名已久的数据库了。本篇文章是介绍Realm和简单的应用例子，方便自己查询，不用动不动看文档，一开始可能不会涉及到复杂的东西，如多线程，加密那些。循序渐进，因为我也是刚开始挖坑之旅。       </p>
+<h2 id="u4E3A_u4EC0_u4E48_u9009_u62E9Realm"><a href="#u4E3A_u4EC0_u4E48_u9009_u62E9Realm" class="headerlink" title="为什么选择Realm"></a>为什么选择Realm</h2><p>原因就是：快、准，并且支持多平台。   </p>
 <ul>
 <li>快 - 因为Realm的实现有别于传统的数据库解决方法，减少了很多读写过程，所以速度快。    </li>
-<li>准 - Realm是面向对象的，对象就是一切，所以它可以不用像传统数据库一样先遍历获取到一行数据再截取自己想要的，而是直接、准确的通过属性获得数据。</li>
+<li>准 - Realm是面向对象的，对象就是一切，所以它可以不用像传统数据库一样先遍历获取到一行数据再截取自己想要的，而是直接、准确的通过属性获得数据。   </li>
 </ul>
-<p>##怎么用</p>
-<p>安装步骤我就跳过了，大家可以参考一下<a href="https://realm.io/docs/swift/latest/" target="_blank" rel="external">官方文档</a>，足够详细的文档！<br>关于Realm还有一个插件可以安装，用于快速生成Realm model。 我们可以通过Alcatraz搜索<code>RealmPlugin</code>。安装成功后在新建文件(command + N)的时候，会出现多一个选项，如下图：<img src="http://7xsq0h.com2.z0.glb.clouddn.com/Realm%E6%8F%92%E4%BB%B6.png" alt="插件">   </p>
-<p>###1. 数据</p>
-<p>通过刚刚安装的插件，我们先创建两个新的model类，并且添加一些属性。 </p>
-<p>####swift:</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Cat</span>: <span class="typename">Object &#123;</span></span></span><br><span class="line">    </span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">""</span></span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">0</span></span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> ownerName</span> = <span class="string">""</span></span><br><span class="line">&#125;</span><br><span class="line">```</span><br></pre></td></tr></table></figure>
+<h2 id="u600E_u4E48_u7528"><a href="#u600E_u4E48_u7528" class="headerlink" title="怎么用"></a>怎么用</h2><p>安装步骤我就跳过了，大家可以参考一下<a href="https://realm.io/docs/swift/latest/" target="_blank" rel="external">官方文档</a>，足够详细的文档！<br>关于Realm还有一个插件可以安装，用于快速生成Realm model。 我们可以通过Alcatraz搜索<code>RealmPlugin</code>。安装成功后在新建文件(command + N)的时候，会出现多一个选项，如下图：<img src="http://7xsq0h.com2.z0.glb.clouddn.com/Realm%E6%8F%92%E4%BB%B6.png" alt="插件">   </p>
+<h3 id="1-__u6570_u636E"><a href="#1-__u6570_u636E" class="headerlink" title="1. 数据"></a>1. 数据</h3><p>通过刚刚安装的插件，我们先创建两个新的model类，并且添加一些属性。 </p>
+<h4 id="swift_3A"><a href="#swift_3A" class="headerlink" title="swift:"></a>swift:</h4><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Cat</span>: <span class="typename">Object &#123;</span></span></span><br><span class="line">    </span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">""</span></span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">0</span></span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> ownerName</span> = <span class="string">""</span></span><br><span class="line">&#125;</span><br><span class="line">```</span><br></pre></td></tr></table></figure>
 <p>class Owner: Object {</p>
 <pre><code>dynamic var name = &quot;&quot;
 let cats = List&lt;Cat&gt;()
-</code></pre><p>}<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">###<span class="id">#OC</span>:</span><br></pre></td></tr></table></figure></p>
+</code></pre><p>}<br><figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#### OC:</span></span><br></pre></td></tr></table></figure></p>
 <p>@interface Cat : RLMObject</p>
 <p>@property NSString <em>ownerName;<br>@property NSString </em>name;<br>@property NSInteger age;</p>
 <p>@end<br>RLM_ARRAY_TYPE(Cat)<br><figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">```</span><br><span class="line"><span class="variable">@interface</span> <span class="attribute">Owner </span>: RLMObject</span><br><span class="line"></span><br><span class="line"><span class="variable">@property</span> NSString *name;</span><br><span class="line"><span class="variable">@property</span> RLMArray&lt;Cat&gt; *cats;</span><br><span class="line"></span><br><span class="line"><span class="variable">@end</span></span><br><span class="line"><span class="function">RLM_ARRAY_TYPE</span>(Owner)</span><br></pre></td></tr></table></figure></p>
@@ -85,8 +81,7 @@ let cats = List&lt;Cat&gt;()
 5. OC的property默认可以为nil，假如需要限制不为空，要重写这个方法`+ requiredProperties `：   
 </code></pre><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="constant">NSArray</span> *)requiredProperties &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="annotation">@[@<span class="string">"name"</span>]</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <hr>
-<p>###2. 读写    </p>
-
+<h3 id="2-__u8BFB_u5199"><a href="#2-__u8BFB_u5199" class="headerlink" title="2. 读写"></a>2. 读写</h3><h4 id="u5EFA"><a href="#u5EFA" class="headerlink" title="建"></a>建</h4>
     </section>
     <footer class="post-footer">
       <section class="author">
