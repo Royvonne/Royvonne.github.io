@@ -56,7 +56,37 @@
 </span>
     <h1 class="post-title">初见Realm</h1>
     <section class="post-content">
-      
+      <p>关于Realm，其实很早之前就有看到不少文章，当时公司没有持久化保存的需求，我也就没动力去研究。最近公司决定给客户端加上聊天功能，需要用到数据库了。我想终于可以用用这个慕名已久的数据库了。本篇文章是介绍Realm和简单的应用例子，方便自己查询，不用动不动看文档，一开始可能不会涉及到复杂的东西，如多线程，加密那些。循序渐进，因为我也是刚开始挖坑之旅。 </p>
+<p>##为什么选择Realm</p>
+<p>原因就是：快、准，并且支持多平台。   </p>
+<ul>
+<li>快 - 因为Realm的实现有别于传统的数据库解决方法，减少了很多读写过程，所以速度快。    </li>
+<li>准 - Realm是面向对象的，对象就是一切，所以它可以不用像传统数据库一样先遍历获取到一行数据再截取自己想要的，而是直接、准确的通过属性获得数据。</li>
+</ul>
+<p>##怎么用</p>
+<p>安装步骤我就跳过了，大家可以参考一下<a href="https://realm.io/docs/swift/latest/" target="_blank" rel="external">官方文档</a>，足够详细的文档！<br>关于Realm还有一个插件可以安装，用于快速生成Realm model。 我们可以通过Alcatraz搜索<code>RealmPlugin</code>。安装成功后在新建文件(command + N)的时候，会出现多一个选项，如下图：<img src="http://7xsq0h.com2.z0.glb.clouddn.com/Realm%E6%8F%92%E4%BB%B6.png" alt="插件">   </p>
+<p>###1. 数据</p>
+<p>通过刚刚安装的插件，我们先创建两个新的model类，并且添加一些属性。 </p>
+<p>####swift:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Cat</span>: <span class="typename">Object &#123;</span></span></span><br><span class="line">    </span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> name</span> = <span class="string">""</span></span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> age</span> = <span class="number">0</span></span><br><span class="line">    dynamic <span class="variable"><span class="keyword">var</span> ownerName</span> = <span class="string">""</span></span><br><span class="line">&#125;</span><br><span class="line">```</span><br></pre></td></tr></table></figure>
+<p>class Owner: Object {</p>
+<pre><code>dynamic var name = &quot;&quot;
+let cats = List&lt;Cat&gt;()
+</code></pre><p>}<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">###<span class="id">#OC</span>:</span><br></pre></td></tr></table></figure></p>
+<p>@interface Cat : RLMObject</p>
+<p>@property NSString <em>ownerName;<br>@property NSString </em>name;<br>@property NSInteger age;</p>
+<p>@end<br>RLM_ARRAY_TYPE(Cat)<br><figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">```</span><br><span class="line"><span class="variable">@interface</span> <span class="attribute">Owner </span>: RLMObject</span><br><span class="line"></span><br><span class="line"><span class="variable">@property</span> NSString *name;</span><br><span class="line"><span class="variable">@property</span> RLMArray&lt;Cat&gt; *cats;</span><br><span class="line"></span><br><span class="line"><span class="variable">@end</span></span><br><span class="line"><span class="function">RLM_ARRAY_TYPE</span>(Owner)</span><br></pre></td></tr></table></figure></p>
+<p>因为公司没打算用swift，但是自己一直有在学，所以两个版本的代码我都写出来了。我在这里创建了一个Cat和Owner的model，<code>Object</code>/<code>RLMObject</code>是Realm的类。   </p>
+<p><strong>Tips</strong>：  </p>
+<pre><code>1. 在swfit中，Realm model的属性都应该用`dynamic`修饰以便访问数据库数据，但是有两个特例，上面看到的List是其中一个，可以理解为Array，还有一个是RealmOptional。   
+2. 在OC中，RLMArray有两种定义方法，`&lt;Object *&gt;`和`&lt;Object&gt;`，前者防止编译时使用错误的类型，后者让Realm在运行时确定数据model的架构。     
+3. 细心的朋友应该已经注意到OC版出现了一个这样的宏`RLM_ARRAY_TYPE()`，有了这个宏才能写上面`RLMArray&lt;Cat&gt;`这种格式的property。不纠结，跟着文档来就行。（用插件生成model的话，会自动帮你写上，不用担心忘掉。）       
+4. 应该还有一个注意到的就是和我们平常写的OC代码不一样，property后面没有weak、strong之类的修饰词，那是因为Realm内部就实现了完整的语义解析，还是那句，不纠结。      
+5. OC的property默认可以为nil，假如需要限制不为空，要重写这个方法`+ requiredProperties `：   
+</code></pre><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="constant">NSArray</span> *)requiredProperties &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="annotation">@[@<span class="string">"name"</span>]</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<p>###2. 读写    </p>
+
     </section>
     <footer class="post-footer">
       <section class="author">
