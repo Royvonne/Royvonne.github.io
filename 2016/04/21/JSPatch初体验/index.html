@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>JSPatch初体验 | Roy Lee</title>
+  <meta name="description" content="" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="/css/style.css" />
+  <meta name="generator" content="Roy Lee">
+
+  
+  
+  
+
+  
+</head>
+
+<!--
+<body class="post-template">
+-->
+<body class="home-template">
+<div id="perspective" class="perspective effect-movedown">
+  <div class="container">
+    <!-- wrapper -->
+    <div class="wrapper">
+
+      <header class="site-head"  style="background: #24282b url(/img/img-new_bg.jpg) 0 -20%" >
+    <div class="vertical">
+        <div class="site-head-content inner">
+            
+            <h1 class="blog-title">Roy Lee</h1>
+            <h2 class="blog-description"><button id="showMenu">Show Menu</button></h2>
+        </div>
+    </div>
+</header>
+
+      
+
+<main class="content" role="main">
+  <article class="post">
+    <span class="post-meta">
+      <time datetime="2016-04-21T01:39:50.000Z" itemprop="datePublished">
+          2016-04-21
+      </time>
+    
+    
+    | 
+    <a href='/tags/JSPatch/'>JSPatch</a>
+    
+    
+</span>
+    <h1 class="post-title">JSPatch初体验</h1>
+    <section class="post-content">
+      <p>最近公司的项目因为一些旧代码出现了各种水土不服，比如：注册流程有用户反映，明明没有填错电话号码，怎么一直提示错误。原来是因为客户端用的检验是网上一些旧的正则，而那位用户用的可能是虚拟运营商那种177开头的号码，所以…   其实这种情况只要客户端放开验证就好了，而我不得不发一个版本去修复，中间等待的时间还需要我们自己手动帮用户注 册。                                    </p>
+<p>相信大家都遇到过这样类似的情况，app因为临界值处理不好（<code>&lt;</code>写成<code>&lt;=</code>）出现crash/流程走不下去；或者逻辑写得不好，导致不适应的情况等等。为了这种小问题要等上一星期的审核，大大影响了用户体验。                  </p>
+<p>于是我萌生了找一个能hoxfix的方法，依稀记得以前看过唐巧大神的文章，里面提过不知道哪个app用的是Lua写的框架，慢慢的JSPatch走入眼帘。       </p>
+<hr>
+<h3 id="JSPatch_u7B80_u4ECB"><a href="#JSPatch_u7B80_u4ECB" class="headerlink" title="JSPatch简介"></a>JSPatch简介</h3><p>这个框架是国内一位开发者开发的，棒棒的！！！这是作者的<a href="http://blog.cnbang.net" target="_blank" rel="external">博客</a>。 由名字可以知道，这框架具体是用通过JS实现hotfix的，详细的实现原理在作者的博客中有叙述，我就不搬运了。大概就是js+黑魔法Method Swizzling，没细看，感兴趣的可以看看。              </p>
+<hr>
+<h3 id="JSPatch_u4F7F_u7528"><a href="#JSPatch_u4F7F_u7528" class="headerlink" title="JSPatch使用"></a>JSPatch使用</h3><h5 id="u63A5_u5165"><a href="#u63A5_u5165" class="headerlink" title="接入"></a>接入</h5><ol>
+<li>添加javascriptcore.framework    </li>
+<li>使用cocoapods的直接添加<code>pod &#39;JSPatch&#39;</code> ，也可以直接拖进项目中&gt;，导入<code>JSEngine.h .m</code>和<code>JSPatch.js</code>就可以了，项目在<a href="https://github.com/bang590/JSPatch" target="_blank" rel="external">这里</a>。               </li>
+</ol>
+<h5 id="u793A_u4F8B"><a href="#u793A_u4F8B" class="headerlink" title="示例"></a>示例</h5><ol>
+<li>可以直接在项目执行js                  </li>
+<li>运行本地js（对于我的情况，而且应该一般都是在后台请求下载保存本地后使）                                      <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[JPEngine startEngine];&#10;//&#30452;&#25509;&#25191;&#34892;js&#10;[JPEngine evaluateScript:@&#34;\&#10;var alertView = require(&#39;UIAlertView&#39;).alloc().init();\&#10; alertView.setTitle(&#39;Alert&#39;);\&#10; alertView.setMessage(&#39;AlertView from js&#39;); \&#10; alertView.addButtonWithTitle(&#39;OK&#39;);\&#10; alertView.show(); \&#10;&#34;];           &#10;&#10;//&#36816;&#34892;&#26412;&#22320;js      &#10;NSString *sourcePath = [[NSBundle mainBundle] pathForResource:@&#34;sample&#34; ofType:@&#34;js&#34;];&#10;NSString *script = [NSString stringWithContentsOfFile:sourcePath encoding:NSUTF8StringEncoding error:nil];&#10;[JPEngine evaluateScript:script];</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h5 id="u4F7F_u7528"><a href="#u4F7F_u7528" class="headerlink" title="使用"></a>使用</h5><p>首先我们先理一下这个流程，大概是：用户反映crash -&gt; 写js文件放到后台 -&gt; 打开app检测是否需要下载js文件 -&gt; 下载保存使用。            </p>
+<p>用我上面提到的验证手机号码例子，在项目中一开始的代码是这样的：             </p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)verification &#123;       </span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> ([<span class="keyword">self</span><span class="variable">.phoneTextField</span><span class="variable">.text</span> xxxx]) &#123;</span><br><span class="line"></span><br><span class="line">       <span class="comment">// 条件不符合</span></span><br><span class="line">       <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   [<span class="keyword">self</span> regist];	       </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在就是这个if条件影响了后续的注册流程，只要把它拿掉就可以。    </p>
+<p> js文件是这样的：<br>   <figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">verification</span>: <span class="string">function() &#123;</span></span><br><span class="line"></span><br><span class="line"><span class="armasm">   <span class="keyword">self.regist();</span><br><span class="line"></span>&#125;</span></span><br></pre></td></tr></table></figure></p>
+<p>因为我还在自己测试阶段，没弄后台来下载js文件，这一步我就跳过了，在实际场景中，可以在公司的服务器弄个专门的地方来放；另外还可以用<a href="http://jspatch.com" target="_blank" rel="external">JSPatch后台</a>来做这事，这个比较适合个人开发者，还不用考虑安全问题。                  </p>
+<p>最后在<code>didFinishLaunchingWithOptions</code>方法里面写上JSPatch框架的调用：         </p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[JPEngine startEngine];</span><br><span class="line">NSString *sourcePath = [[NSBundle mainBundle] <span class="string">pathForResource:</span>@<span class="string">"test"</span> <span class="string">ofType:</span>@<span class="string">"js"</span>];</span><br><span class="line">NSString *script = [NSString <span class="string">stringWithContentsOfFile:</span>sourcePath <span class="string">encoding:</span>NSUTF8StringEncoding <span class="string">error:</span>nil];</span><br><span class="line">[JPEngine <span class="string">evaluateScript:</span>script];</span><br></pre></td></tr></table></figure>
+<h5 id="u8BED_u6CD5_u5DE5_u5177"><a href="#u8BED_u6CD5_u5DE5_u5177" class="headerlink" title="语法工具"></a>语法工具</h5><p>作者考虑到OC代码转换成JSPatch的便利，提供了一个可以直接转换的<a href="http://bang590.github.io/JSPatchConvertor/" target="_blank" rel="external">工具</a>。      </p>
+<p><img src="http://7xsq0h.com2.z0.glb.clouddn.com/JSPatch_change.png" alt="JSPatch">    </p>
+<p><strong>Tips</strong>     </p>
+<p>OC的宏定义在脚本里面是无效的，例如UIAlertController的类型，是alert还是actionSheet。解决办法是用数字代替，或者在脚本中声明。</p>
+<hr>
+<h3 id="u4F55_u53BB_u4F55_u4ECE"><a href="#u4F55_u53BB_u4F55_u4ECE" class="headerlink" title="何去何从"></a>何去何从</h3><p>这里简单介绍了JSPatch的使用，还有更多高级的用法和注意事项，例如：           </p>
+<ul>
+<li><p>安全问题，用自己的服务器需要考虑这个，作者建议是RSA校验，而且他做的平台也是才用这个策略。       </p>
+</li>
+<li><p>回滚，因为有可能脚本会导致另外的crash，这时我们应该有可以控制下次不加载脚本的应对方法。          </p>
+</li>
+<li><p>可以动态添加类，属性，甚至一个功能模块，这就相当于React Native了。后续再研究，目前hotfix已经够用。                        </p>
+<p>​    </p>
+</li>
+</ul>
+<hr>
+<h3 id="u53C2_u8003_u94FE_u63A5"><a href="#u53C2_u8003_u94FE_u63A5" class="headerlink" title="参考链接"></a>参考链接</h3><p><a href="http://blog.cnbang.net/works/2767/" target="_blank" rel="external">JSPatch – 动态更新iOS APP</a>    </p>
+<p><a href="http://blog.cnbang.net/tech/2808/" target="_blank" rel="external">JSPatch实现原理详解</a>      </p>
+<p><a href="http://blog.cnbang.net/tech/2855/" target="_blank" rel="external">JSPatch实现原理详解&lt;二&gt;</a>     </p>
+<p><a href="http://blog.cnbang.net/tech/2879/" target="_blank" rel="external">JSPatch 部署安全策略</a>    </p>
+<p><a href="http://blog.cnbang.net/tech/3123/" target="_blank" rel="external">JSPatch更新：完善开发功能模块的能力</a>    </p>
+
+    </section>
+    <footer class="post-footer">
+      <section class="author">
+    <h4>Roy</h4>
+    <p>iOS</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-sina-weibo" href="http://v.t.sina.com.cn/share/share.php?title=iOS ?url=royvonne.com/2016/04/21/JSPatch初体验/" target="_blank">
+        <span class="hidden">weibo</span>
+    </a>
+    <a class="icon-twitter" href="http://twitter.com/share?url=royvonne.com/2016/04/21/JSPatch初体验/"
+       onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=royvonne.com/2016/04/21/JSPatch初体验/"
+       onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=royvonne.com/2016/04/21/JSPatch初体验/"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <span class="icon-logo">•</span>
+    
+    <a class="older-posts" href="/2016/04/07/初见Realm/">
+        初见Realm →
+    </a>
+    
+</nav>
+
+  <div id="comment" class="comments-area">
+    <h4 class="title"><a href="#disqus_comments" name="disqus_comments">Comments</a></h4>
+    
+    <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+    
+</div>
+
+</main>
+
+
+      
+<footer class="site-footer">
+  
+  <div class="inner">
+     <section class="copyright">All content copyright <a href="/">Roy Lee</a> &copy; 2014 &bull; All rights reserved.</section>
+     <section class="poweredby">Proudly published with <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+      <script src="http://lib.sinaapp.com/js/jquery/2.0.3/jquery-2.0.3.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+<script type="text/javascript" src="/js/menu.js"></script>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'royvonnes2';
+
+    (function(){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+  </div>
+</div>
+
+<nav  class="outer-nav top horizontal">
+
+          <a class="icon-home"  href="/archives"><span>Home</span></a>
+
+          <a class="icon-apple"  href="/categories/iOS"><span>iOS</span></a>
+
+          <a class="icon-book"  href="/categories/Other"><span>Other</span></a>
+
+</nav>
+
+</div>
+</body>
+</html>
