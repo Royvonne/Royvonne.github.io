@@ -61,6 +61,11 @@
 <p>于是我萌生了找一个能hoxfix的方法，依稀记得以前看过唐巧大神的文章，里面提过不知道哪个app用的是Lua写的框架，慢慢的JSPatch走入眼帘。       </p>
 <hr>
 <h3 id="JSPatch_u7B80_u4ECB"><a href="#JSPatch_u7B80_u4ECB" class="headerlink" title="JSPatch简介"></a>JSPatch简介</h3><p>这个框架是国内一位开发者开发的，棒棒的！！！这是作者的<a href="http://blog.cnbang.net" target="_blank" rel="external">博客</a>。 由名字可以知道，这框架具体是用通过js实现hotfix的，详细的实现原理在作者的博客中有叙述，我就不搬运了。大概就是js+黑魔法Method Swizzling，没细看，感兴趣的可以看看。              </p>
+<p><a href="http://blog.cnbang.net/works/2767/" target="_blank" rel="external">JSPatch – 动态更新iOS APP</a>    </p>
+<p><a href="http://blog.cnbang.net/tech/2808/" target="_blank" rel="external">JSPatch实现原理详解</a>      </p>
+<p><a href="http://blog.cnbang.net/tech/2855/" target="_blank" rel="external">JSPatch实现原理详解&lt;二&gt;</a>     </p>
+<p><a href="http://blog.cnbang.net/tech/2879/" target="_blank" rel="external">JSPatch 部署安全策略</a>    </p>
+<p><a href="http://blog.cnbang.net/tech/3123/" target="_blank" rel="external">JSPatch更新：完善开发功能模块的能力</a> </p>
 <hr>
 <h3 id="JSPatch_u4F7F_u7528"><a href="#JSPatch_u4F7F_u7528" class="headerlink" title="JSPatch使用"></a>JSPatch使用</h3><h5 id="u63A5_u5165"><a href="#u63A5_u5165" class="headerlink" title="接入"></a>接入</h5><ol>
 <li>添加javascriptcore.framework    </li>
@@ -90,16 +95,9 @@
 </li>
 <li><p>回滚，因为有可能脚本会导致另外的crash，这时我们应该有可以控制下次不加载脚本的应对方法。          </p>
 </li>
-<li><p>可以动态添加类，属性，甚至一个功能模块，这就相当于React Native了。后续再研究，目前hotfix已经够用。                        </p>
-<p>​    </p>
+<li><p>可以动态添加类，属性，甚至一个功能模块，这就相当于React Native了。后续再研究，目前hotfix已经够用。                          </p>
 </li>
 </ul>
-<hr>
-<h3 id="u53C2_u8003_u94FE_u63A5"><a href="#u53C2_u8003_u94FE_u63A5" class="headerlink" title="参考链接"></a>参考链接</h3><p><a href="http://blog.cnbang.net/works/2767/" target="_blank" rel="external">JSPatch – 动态更新iOS APP</a>    </p>
-<p><a href="http://blog.cnbang.net/tech/2808/" target="_blank" rel="external">JSPatch实现原理详解</a>      </p>
-<p><a href="http://blog.cnbang.net/tech/2855/" target="_blank" rel="external">JSPatch实现原理详解&lt;二&gt;</a>     </p>
-<p><a href="http://blog.cnbang.net/tech/2879/" target="_blank" rel="external">JSPatch 部署安全策略</a>    </p>
-<p><a href="http://blog.cnbang.net/tech/3123/" target="_blank" rel="external">JSPatch更新：完善开发功能模块的能力</a>    </p>
 
     </section>
     <footer class="post-footer">
