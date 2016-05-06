@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <title>统计Notes字数的tweak | Roy Lee</title>
+  <meta name="description" content="" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" type="text/css" href="/css/screen.css" />
+  <link rel="stylesheet" type="text/css" href="/css/style.css" />
+  <meta name="generator" content="Roy Lee">
+
+  
+  
+  
+
+  
+</head>
+
+<!--
+<body class="post-template">
+-->
+<body class="home-template">
+<div id="perspective" class="perspective effect-movedown">
+  <div class="container">
+    <!-- wrapper -->
+    <div class="wrapper">
+
+      <header class="site-head"  style="background: #24282b url(/img/img-new_bg.jpg) 0 -20%" >
+    <div class="vertical">
+        <div class="site-head-content inner">
+            
+            <h1 class="blog-title">Roy Lee</h1>
+            <h2 class="blog-description"><button id="showMenu">Show Menu</button></h2>
+        </div>
+    </div>
+</header>
+
+      
+
+<main class="content" role="main">
+  <article class="post">
+    <span class="post-meta">
+      <time datetime="2016-05-06T09:51:01.000Z" itemprop="datePublished">
+          2016-05-06
+      </time>
+    
+    
+    | 
+    <a href='/tags/tweak/'>tweak</a>
+    
+    
+</span>
+    <h1 class="post-title">统计Notes字数的tweak</h1>
+    <section class="post-content">
+      <p>因为iOS9系统原生的Notes增加了许多实用功能，像涂鸦，拍照，录像等，直觉代码方面应该改变了不少，那么拿来练手就不错。  </p>
+<hr>
+<h3 id="u76EE_u6807"><a href="#u76EE_u6807" class="headerlink" title="目标"></a>目标</h3><p>首先我们先定一些目标，然后逐个攻破。<br>总的目标是监测用户输入的字数，显示在title上。细分出来有以下几点：</p>
+<ol>
+<li>获取每一条note，这样就能拿到内容，字数就自然而然得到了。</li>
+<li>找到显示的controller，实时监测内容的变化来修改title的显示。     </li>
+</ol>
+<p><img src="http://7xsq0h.com2.z0.glb.clouddn.com/notes_final.jpg" alt="最终效果">  </p>
+<h3 id="u5957_u8DEF"><a href="#u5957_u8DEF" class="headerlink" title="套路"></a>套路</h3><p>现在什么都讲套路，那么给app加tweak的套路是什么呢？</p>
+<ol>
+<li>从UI上寻找突破口，意思就是看看有没有容易通过command + F可以找到的字眼。像我们这个例子的话，因为要计算字数，那么自然从那个输入的地方切入最合适。   </li>
+<li>利用Cycript一层一层地往上找对应的UI函数。</li>
+<li>UI函数顺藤摸瓜寻找   目标函数。    </li>
+</ol>
+<h3 id="u5B9E_u8DF5"><a href="#u5B9E_u8DF5" class="headerlink" title="实践"></a>实践</h3><h4 id="u5B9A_u4F4DNotes_app"><a href="#u5B9A_u4F4DNotes_app" class="headerlink" title="定位Notes app"></a>定位Notes app</h4><p>首先关闭所有打开的app，接着打开我们的目标app — Notes。然后ssh到iphone上，使用<code>ps</code>命令：<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/ps_command.png" alt=""><br><code>MobileNotes</code>就是我们要找的东西。（另外我们还能看到一些在后台运行的系统app。）既然可执行文件找到了，那么就该class-dump上场了。         </p>
+<h4 id="class-dump_u5934_u6587_u4EF6"><a href="#class-dump_u5934_u6587_u4EF6" class="headerlink" title="class-dump头文件"></a>class-dump头文件</h4><p>不是从AppStore下载的就不用砸壳，于是直接上class-dump：  </p>
+<pre><code>class-dump -S -s -H /Users/xxx/Develop/files/MobileNotes.app -o /Users/xxx/Develop/headers/Notes      
+</code></pre><p>一共389个头文件，好像比iOS8增加了不少，由此可见这次加的新功能是很良心的。扫了一遍，看到一个<code>ICTextView .h</code>，由于有iOS8的基础，那么这个有9成机会是我们第一步需要找的（站在巨人的肩膀上就是这么简单，笑…）。下面来验证一下。  </p>
+<h4 id="u627E_u8F93_u5165_u7684_u754C_u9762_u548Ccontroller"><a href="#u627E_u8F93_u5165_u7684_u754C_u9762_u548Ccontroller" class="headerlink" title="找输入的界面和controller"></a>找输入的界面和controller</h4><p>还是ssh到iPhone上，输入这行命令<code>cycript -p MobileNotes</code>，在输入<code>[[UIApp keyWindow] recursiveDescription].toString()</code>，magic~~<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/cycript.png" alt=""><br>显示在我们面前的就是当前显示页面的层次，我感觉像代码版的Reveal。可是密密麻麻的，要找到我们想要的东西可是易事，因此我们可以先输入一些语句，然后搜索一下不就出来了吗？果然就看到一个<code>ICTextView</code>：<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/textView.png" alt="">  </p>
+<p>打铁趁热我们继续调用<code>nextResponder</code>找出它的controller：<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/controller.png" alt="">  </p>
+<p>找到controller的下一步当然是试试能不能修改title咯，输入：<code>[#0x15bd3000 setTitle:@&quot;Roy&quot;]</code><br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/set_title.jpg" alt=""><br>No problem! 距离最终目标已经进了一步，继续。  </p>
+<h4 id="u627E_u51FA_u5F53_u524Dnote"><a href="#u627E_u51FA_u5F53_u524Dnote" class="headerlink" title="找出当前note"></a>找出当前note</h4><p>在面向对象编程中，一切皆对象，很自然的想到每一条note都是一个对象，赶紧去<code>ICNoteEditorViewController .h</code>里面看看它的定义，300多行有点多，但是我们有搜索，搜一下关键词note就看到这个东东：<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/note_property.png" alt=""><br>用Cycript打印出来看看是不是要找的对象：<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/note_object.png" alt=""><br>毫无疑问，我们的对象就是它了。接着当然是应该去看看.h是怎样定义的了，来到这一步就遇到第一次卡住我的地方。  </p>
+<h4 id="class-dump_private_frameworks"><a href="#class-dump_private_frameworks" class="headerlink" title="class-dump private frameworks"></a>class-dump private frameworks</h4><p>因为在刚刚class-dump出来的头文件中没有<code>ICNote.h</code>。卡了一段时候后，突然想起这么一句话“class-dump不到的头文件必定在其他bundle或者framework中”，于是重新出发，继续探索之路。想通这里接下来就是看看程序在哪里有用到这个类了。<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/search_ICNote.png" alt="">  </p>
+<p>原来是在一个叫<code>NotesShared</code>的privateFramework里面。接着又遇到第二个问题卡住。官网下载的class-dump好像不能解析出系统库的头文件。找到的<a href="http://www.jianshu.com/p/213ebfecb28a" target="_blank" rel="external">解决方法</a>。      </p>
+<h4 id="u627E_u51FAnote_u5BF9_u8C61_u7684text_u5C5E_u6027"><a href="#u627E_u51FAnote_u5BF9_u8C61_u7684text_u5C5E_u6027" class="headerlink" title="找出note对象的text属性"></a>找出note对象的text属性</h4><p>在<code>ICNote.h</code>里面一通乱找，会发现这样一个实例方法：<code>-(id)noteAsPlainText;</code>，这个看出跟iOS8是有点区别，之前是作为一个属性。不用说，又Cycript（真·神器）呗。<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/text_length.png" alt=""><br>文字，长度。很好！距离最终目标越来越近了，现在就剩下监测文本实时变化的方法。  </p>
+<h4 id="u627E_u51FA_u5B9E_u65F6_u76D1_u6D4B_u6587_u672C_u53D8_u5316_u7684_u65B9_u6CD5"><a href="#u627E_u51FA_u5B9E_u65F6_u76D1_u6D4B_u6587_u672C_u53D8_u5316_u7684_u65B9_u6CD5" class="headerlink" title="找出实时监测文本变化的方法"></a>找出实时监测文本变化的方法</h4><p>从我们平常正向的编程习惯也可以推断出，这类实时的方法一般都是protocol来做的，那我们只要留意protocol就好。首先先去controller的头文件看看具体有实现哪些protocol。<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/protocol.png" alt="">  </p>
+<p>眼尖的我第一眼就看到了熟悉的家伙<code>UITextViewDelegate</code>，心中一丝窃喜，假如有实现这个，连IDA都不用上场就可以搞定了，比iOS8简单！立马往下拉拉拉，果然看到了小伙伴们：<br><img src="http://7xsq0h.com2.z0.glb.clouddn.com/textView_delegate.png" alt=""><br>看到这里，可以写tweak了，一切都那么自然~      </p>
+<h4 id="u7F16_u5199Tweak-xm_u3001Makefile_u3001control"><a href="#u7F16_u5199Tweak-xm_u3001Makefile_u3001control" class="headerlink" title="编写Tweak.xm、Makefile、control"></a>编写Tweak.xm、Makefile、control</h4><p><strong>Tweak.xm：</strong>   </p>
+<pre><code> %hook ICNoteEditorViewController 
+- (void)viewWillAppear:(BOOL)arg1 {
+
+    %orig;
+    NSString *content = [self.note noteAsPlainText];
+    NSString *contentLength = [NSString stringWithFormat:@&quot;%lu&quot;, (unsigned long)[content length]];
+    self.title = contentLength;
+}
+
+- (void)viewDidDisappear:(BOOL)arg1 {
+
+    %orig;
+    self.title = nil;
+}
+
+- (void)textViewDidChange:(UITextView *)arg1 {
+
+    %orig;
+    NSString *content = arg1.text;
+    NSString *contentLength = [NSString stringWithFormat:@&quot;%lu&quot;, (unsigned long)[content length]];
+    self.title = contentLength;
+}
+
+%end      
+</code></pre><p><strong>Makefile：</strong>  </p>
+<pre><code>THEOS\_DEVICE\_IP = 192.168.6.172
+ARCHS = armv7 arm64
+TARGET = iphone:latest:9.0
+
+include theos/makefiles/common.mk
+
+TWEAK_NAME = CharacountForNotes9
+CharacountForNotes9_FILES = Tweak.xm
+
+include $(THEOS_MAKE_PATH)/tweak.mk
+
+after-install::
+    install.exec &quot;killall -9 MobileNotes&quot;              
+</code></pre><p><strong>control：</strong>  </p>
+<pre><code> Package: com.royvonne.characountfornotes9
+Name: CharacountForNotes9
+Depends: mobilesubstrate
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: A character conut tweak to Notes!
+Maintainer: S2
+Author: S2
+Section: Tweaks
+</code></pre><p>接着安装到iPhone中，不过这时候编译应该会报一大段错，大概就是说找不到类，属性，方法之类的。我们需要新建一个.h文件，然后在Tweak.m里面要import一下，编辑好的内容如下：  </p>
+<pre><code>#ifndef CharacountForNotes9\_h 
+#define CharacountForNotes9_h
+#endif /* CharacountForNotes9_h */
+
+@interface ICNote : NSObject
+
+@property (nonatomic, readonly) NSString *noteAsPlainText;
+@end
+
+
+
+
+@class ICTextView;
+@interface ICNoteEditorViewController : UIViewController
+
+@property (nonatomic, retain) ICTextView *textView;
+@property (nonatomic, retain) ICNote *note;
+@property (nonatomic, copy) NSString *title;
+@end
+
+
+
+
+@interface ICTextView : UITextView
+
+@property (nonatomic, copy) NSString *text;
+@end    
+</code></pre><h4 id="u6D4B_u8BD5"><a href="#u6D4B_u8BD5" class="headerlink" title="测试"></a>测试</h4><p>这时应该是没有报错了，假如遇到其他问题，可以留言一起讨论。最后测试的结果就像文章开头所展示一样了，目标达成！  </p>
+<h3 id="u603B_u7ED3"><a href="#u603B_u7ED3" class="headerlink" title="总结"></a>总结</h3><p>原本是觉得iOS9新版的难度会增加，但实践下来，发现竟然比iOS8还要简单。这里只是用到了最基础的逆向手段就达到我们的目标。至于IDA那些神器，后面应该会重点探究，有成果了再写博客。</p>
+
+    </section>
+    <footer class="post-footer">
+      <section class="author">
+    <h4>Roy</h4>
+    <p>iOS</p>
+</section>
+      <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-sina-weibo" href="http://v.t.sina.com.cn/share/share.php?title=iOS ?url=royvonne.com/2016/05/06/Notes统计字数的tweak/" target="_blank">
+        <span class="hidden">weibo</span>
+    </a>
+    <a class="icon-twitter" href="http://twitter.com/share?url=royvonne.com/2016/05/06/Notes统计字数的tweak/"
+       onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=royvonne.com/2016/05/06/Notes统计字数的tweak/"
+       onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=royvonne.com/2016/05/06/Notes统计字数的tweak/"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section>
+
+    </footer>
+  </article>
+  <nav class="pagination" role="pagination">
+    
+    <span class="icon-logo">•</span>
+    
+    <a class="older-posts" href="/2016/04/21/JSPatch初体验/">
+        JSPatch初体验 →
+    </a>
+    
+</nav>
+
+  <div id="comment" class="comments-area">
+    <h4 class="title"><a href="#disqus_comments" name="disqus_comments">Comments</a></h4>
+    
+    <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+    
+</div>
+
+</main>
+
+
+      
+<footer class="site-footer">
+  
+  <div class="inner">
+     <section class="copyright">All content copyright <a href="/">Roy Lee</a> &copy; 2014 &bull; All rights reserved.</section>
+     <section class="poweredby">Proudly published with <a class="icon-ghost" href="http://zespia.tw/hexo/">Hexo</a></section>
+  </div>
+</footer>
+
+      <script src="http://lib.sinaapp.com/js/jquery/2.0.3/jquery-2.0.3.min.js"></script>
+
+<script type="text/javascript" src="/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/js/index.js"></script>
+<script type="text/javascript" src="/js/menu.js"></script>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'royvonnes2';
+
+    (function(){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+  </div>
+</div>
+
+<nav  class="outer-nav top horizontal">
+
+          <a class="icon-home"  href="/archives"><span>Home</span></a>
+
+          <a class="icon-apple"  href="/categories/iOS"><span>iOS</span></a>
+
+          <a class="icon-book"  href="/categories/Other"><span>Other</span></a>
+
+</nav>
+
+</div>
+</body>
+</html>
